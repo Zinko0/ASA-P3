@@ -58,21 +58,23 @@ else:
         min_brinquedos = pais[2]
         prob += pulp.lpSum(x[i, j] for i in range(criancas) for j in lista_criancas[i][2] if lista_criancas[i][1] == ident_pais) >= min_brinquedos
 
-    # Restrição: Cada país não pode exportar mais do que o limite de exportações
+        # Restrição: Cada país não pode exportar mais do que o limite de exportações
     for pais in lista_paises:
         ident_pais = pais[0]
         limite_exportacoes = pais[1]
-        prob += pulp.lpSum(x[i, j] for i in range(criancas) for j in lista_criancas[i][2] if lista_criancas[i][1] == ident_pais) <= limite_exportacoes
+        prob += pulp.lpSum(x[i, j] for i in range(criancas) for j in lista_criancas[i][2] if any(fabrica[1] == ident_pais and lista_criancas[i][1] != ident_pais for fabrica in lista_fabricas)) <= limite_exportacoes
 
     # Resolve o problema
     prob.solve()    
-
-    # Imprime os resultados
-    total_presents = 0
-    for i in range(criancas):
-        for j in lista_criancas[i][2]:
-            if pulp.value(x[i, j]) == 1:
-                total_presents += 1
-    print(total_presents)
+    if pulp.LpStatus[prob.status] != 'Optimal':
+        print("-1")
+    else:
+        # Imprime os resultados
+        total_presents = 0
+        for i in range(criancas):
+            for j in lista_criancas[i][2]:
+                if pulp.value(x[i, j]) == 1:
+                    total_presents += 1
+        print(total_presents)
 
 
