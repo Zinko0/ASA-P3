@@ -43,14 +43,9 @@ else:
     # Função objetivo: Maximizar o número de presentes distribuídos
     prob += pulp.lpSum(x[i, j] for i in range(criancas) for j in lista_criancas[i][2])
 
-    # Restrição: Cada criança deve receber exatamente um presente
+    # Restrição: Cada criança deve receber exatamente um presente desejado ou nada
     for i in range(criancas):
-        prob += pulp.lpSum(x[i, j] for j in lista_criancas[i][2]) == 1
-
-    # Restrição: O presente deve estar na lista de desejos da criança
-    for i in range(criancas):
-        for j in lista_criancas[i][2]:
-            prob += x[i, j] <= 1
+        prob += pulp.lpSum(x[i, j] for j in lista_criancas[i][2]) <= 1
 
     # Restrição: Cada país deve receber pelo menos o número mínimo de brinquedos
     for pais in lista_paises:
@@ -58,23 +53,25 @@ else:
         min_brinquedos = pais[2]
         prob += pulp.lpSum(x[i, j] for i in range(criancas) for j in lista_criancas[i][2] if lista_criancas[i][1] == ident_pais) >= min_brinquedos
 
-        # Restrição: Cada país não pode exportar mais do que o limite de exportações
+    #ESTA RESTRIÇÃO NÃO ESTÁ CORRETA
+    # Restrição: Cada país não pode exportar mais do que o limite de exportações
     for pais in lista_paises:
         ident_pais = pais[0]
         limite_exportacoes = pais[1]
-        prob += pulp.lpSum(x[i, j] for i in range(criancas) for j in lista_criancas[i][2] if any(fabrica[1] == ident_pais and lista_criancas[i][1] != ident_pais for fabrica in lista_fabricas)) <= limite_exportacoes
+        prob += pulp.lpSum(x[i, j] for i in range(criancas) for j in lista_criancas[i][2] if lista_criancas[i][1] == ident_pais) <= limite_exportacoes
+
+     
+     
 
     # Resolve o problema
-    prob.solve()    
+    prob.solve(pulp.PULP_CBC_CMD(msg=False))
+    
     if pulp.LpStatus[prob.status] != 'Optimal':
         print("-1")
     else:
         # Imprime os resultados
-        total_presents = 0
-        for i in range(criancas):
-            for j in lista_criancas[i][2]:
-                if pulp.value(x[i, j]) == 1:
-                    total_presents += 1
-        print(total_presents)
+        print(int(pulp.value(prob.objective)))
+
+        
 
 
