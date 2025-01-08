@@ -17,12 +17,12 @@ for i in range(fabricas + paises + criancas):
 
     if i < fabricas:
         ident_fabrica, ident_pais_fabrica, stock_max = map(int, linha.split())
-        if stock_max > 0:  # Verifica se o estoque máximo é maior que 0
-            lista_fabricas.append((ident_fabrica, ident_pais_fabrica, stock_max))
-            stocks_sum += stock_max
-            if ident_pais_fabrica not in fabricas_por_pais:
-                fabricas_por_pais[ident_pais_fabrica] = []
-            fabricas_por_pais[ident_pais_fabrica].append(ident_fabrica)
+
+        lista_fabricas.append((ident_fabrica, ident_pais_fabrica, stock_max))
+        stocks_sum += stock_max
+        if ident_pais_fabrica not in fabricas_por_pais:
+            fabricas_por_pais[ident_pais_fabrica] = []
+        fabricas_por_pais[ident_pais_fabrica].append(ident_fabrica)
 
     elif i < fabricas + paises:
         ident_pais, limite_exportacoes, min_brinquedos = map(int, linha.split())
@@ -68,7 +68,8 @@ else:
 
     # Restrição: O estoque de cada fábrica não pode ser excedido
     for ident_fabrica, _, stock_max in lista_fabricas:
-        prob += pulp.lpSum(x[i, j] for i in range(criancas) for j in lista_criancas[i][2] if j == ident_fabrica) <= stock_max
+        if stock_max > 0:
+            prob += pulp.lpSum(x[i, j] for i in range(criancas) for j in lista_criancas[i][2] if j == ident_fabrica) <= stock_max
 
     # Resolve o problema
     prob.solve(pulp.PULP_CBC_CMD(msg=False))
